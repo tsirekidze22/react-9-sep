@@ -1,110 +1,87 @@
-import { useRef, useState } from "react";
+import { useForm } from "react-hook-form";
+import schema from "./validations/LoginValidations";
+import { yupResolver } from "@hookform/resolvers/yup";
+import { Eye, EyeOff } from "lucide-react";
+
 import "./App.css";
+import { useState } from "react";
 
 function App() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [emailError, setEmailError] = useState("");
-  const [passwordError, setPasswordError] = useState("");
+  const [isVisible, setIsVisible] = useState(false);
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors, isValid },
+  } = useForm({ mode: "onChange", resolver: yupResolver(schema) });
 
-  const validateInput = (name, value) => {
-    switch (name) {
-      case "email":
-        if (!value.includes("@")) {
-          return "Email is invalid. '@' is missing!";
-        }
-        return "";
-      case "password":
-        if (value.length < 8) {
-          return "Invalid password. Minimum 8 symbols required.";
-        }
-        return "";
-      default:
-        return "";
-    }
+  const sendData = (data) => {
+    console.log("Data sent!", data);
+    reset();
   };
-
-  const handleChange = (event) => {
-    const { name, value } = event.target;
-
-    if (name === "email") {
-      setEmail(value);
-      const emailErr = validateInput("email", value);
-      setEmailError(emailErr);
-    }
-
-    if (name === "password") {
-      setPassword(value);
-      const passwordErr = validateInput("password", value);
-      setPasswordError(passwordErr);
-    }
-
-    console.log(name, value);
-  };
-
-  const handleSubmit = (event) => {
-    event.preventDefault();
-
-    const emailErr = validateInput("email", email);
-    const passwordErr = validateInput("password", password);
-
-    setEmailError(emailErr);
-    setPasswordError(passwordErr);
-
-    if (emailErr || passwordErr) {
-      return;
-    }
-
-    setEmail("");
-    setPassword("");
-    console.log("ინფორმაცია გაიგზავნა!");
-  };
-
-  const isBtnDisabled =
-    emailError !== "" ||
-    passwordError !== "" ||
-    email === "" ||
-    password === "";
 
   return (
     <>
       <form
-        onSubmit={handleSubmit}
+        onSubmit={handleSubmit(sendData)}
         className="mt-80 w-100 mx-auto p-4 rounded-md bg-white border-1 border-gray-300"
       >
         <input
+          {...register("email")}
+          //  {...register("email", {
+          //   required: "მეილი არის სავალდებულო ველი",
+          //   validate: (value) => {
+          //     if (value.includes("@")) {
+          //       return true;
+          //     }
+
+          //     return "აუცილებელია '@'-ს გამოყენება";
+          //   },
+          // })}
           type="email"
           placeholder="Enter email..."
-          required
-          value={email}
           name="email"
-          onChange={handleChange}
           className=" w-full bg-white border-1 border-gray-600 p-4 rounded-md my-4"
         />
-        {emailError && <p className="text-red-500">{emailError}</p>}
-        <input
-          type="password"
-          placeholder="Enter password..."
-          required
-          value={password}
-          name="password"
-          onChange={handleChange}
-          className="w-full bg-white border-1 border-gray-600 p-4 rounded-md my-4"
-        />
-        {passwordError && <p className="text-red-500">{passwordError}</p>}
+        {errors.email && <p className="text-red-500">{errors.email.message}</p>}
+        <div className=" relative  my-4">
+          <input
+            {...register("password")}
+            // {...register("password", {
+            //   required: "პაროლი არის სავალდებულო ველი",
+            //   minLength: {
+            //     value: 8,
+            //     message: "პაროლი უნდა შედგებოდეს მინიმუმ 8 სიმბოლოსგან",
+            //   },
+            // })}
+            type={isVisible ? "text" : "password"}
+            placeholder="Enter password..."
+            name="password"
+            className="w-full bg-white border-1 border-gray-600 p-4 rounded-md"
+          />
 
+          <button
+            type="button"
+            className="absolute top-5 right-5 cursor-pointer"
+            onClick={() => setIsVisible(!isVisible)}
+          >
+            {!isVisible ? <Eye /> : <EyeOff />}
+          </button>
+        </div>
+        {errors.password && (
+          <p className="text-red-500">{errors.password.message}</p>
+        )}
         <button
-          disabled={isBtnDisabled}
+          disabled={!isValid}
           type="submit"
-          className="mt-5 rounded-md w-full text-center p-4"
+          className="mt-5 rounded-md w-full text-center p-4 "
           style={{
-            backgroundColor: isBtnDisabled ? "#888" : "lightgreen",
-            cursor: isBtnDisabled ? "not-allowed" : "pointer",
+            backgroundColor: !isValid ? "#888" : "lightgreen",
+            cursor: !isValid ? "not-allowed" : "pointer",
           }}
         >
           Send
         </button>
-        {/* <button type="button">show/hide</button> */}
       </form>
     </>
   );
